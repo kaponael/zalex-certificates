@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { CertificateStatusBadge } from "@/components/certificate-status-badge"
 import {
   Table,
   TableBody,
@@ -143,7 +144,7 @@ export function CertificateDataTable({
                 </TableCell>
 
                 <TableCell>
-                  {request.status}
+                  <CertificateStatusBadge status={request.status} />
                 </TableCell>
               </TableRow>
             ))
