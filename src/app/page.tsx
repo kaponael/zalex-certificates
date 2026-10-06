@@ -1,9 +1,22 @@
-import Image from "next/image";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/page-header"
 
 export default function Home() {
   return (
-   <p className="text-center text-2xl font-bold mt-10">
-      Welcome to Zalex Certificates!
-    </p>
-  );
+    <>
+      <PageHeader title="Home" />
+      <section className="flex flex-1 flex-col items-center justify-center gap-8 p-6">
+        <h1 className="text-4xl font-bold">Welcome to Zalex Certificates!</h1>
+        <div className="flex flex-col gap-6 sm:flex-row">
+          <Button render={<Link href="/certificate-lists" />} size="lg">
+            Certificate Lists
+          </Button>
+          <Button render={<Link href="/request-certificate" />} size="lg">
+            Request Certificate
+          </Button>
+        </div>
+      </section>
+    </>
+  )
 }
