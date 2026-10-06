@@ -1,0 +1,8 @@
+# Project-scoped Codex configuration. Codex loads it after this project is trusted.
+
+[agents]
+enabled = true
+
+[agents.code-reviewer]
+description = "Read-only reviewer for Zalex Certificates changes. Finds concrete correctness, security, accessibility, and regression issues and reports prioritized findings without editing files."
+config_file = "agents/code-reviewer.toml"
