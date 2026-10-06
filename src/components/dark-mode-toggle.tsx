@@ -1,32 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 import { MoonIcon, SunIcon } from "lucide-react"
 
+// Checks localStorage first for theme, if savedTheme equals dark,
+// then set darkMode to true, else check if the user prefers dark mode and set darkMode accordingly.
 export function DarkModeToggle() {
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme")
-    let darkMode = false
+    let darkMode
 
     if (savedTheme) {
       darkMode = savedTheme === "dark"
     } else {
       darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
     }
-
+    // SET the starting theme
     document.documentElement.classList.toggle("dark", darkMode)
-    setIsDarkMode(darkMode)
   }, [])
 
   function toggleDarkMode() {
-    const newDarkMode = !isDarkMode
-
-    document.documentElement.classList.toggle("dark", newDarkMode)
-    localStorage.setItem("theme", newDarkMode ? "dark" : "light")
-    setIsDarkMode(newDarkMode)
+    // FLIP the current theme
+    const isDarkMode = document.documentElement.classList.toggle("dark")
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light")
   }
 
   return (
@@ -35,14 +32,11 @@ export function DarkModeToggle() {
         <SidebarMenuButton
           type="button"
           onClick={toggleDarkMode}
-          aria-pressed={isDarkMode}
         >
-          {isDarkMode ? (
-            <SunIcon aria-hidden="true" />
-          ) : (
-            <MoonIcon aria-hidden="true" />
-          )}
-          <span>{isDarkMode ? "Light mode" : "Dark mode"}</span>
+          <MoonIcon className="dark:hidden" aria-hidden="true" />
+          <SunIcon className="hidden dark:block" aria-hidden="true" />
+          <span className="dark:hidden">Dark mode</span>
+          <span className="hidden dark:inline">Light mode</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
