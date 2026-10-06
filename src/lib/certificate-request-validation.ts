@@ -12,10 +12,12 @@ export function validateCertificateRequestForm(
 ): FormErrors {
   const errors: FormErrors = {}
 
-  if (!values.addressTo) {
+  const addressTo = values.addressTo.trim()
+
+  if (!addressTo) {
     errors.addressTo = "Address to is required."
-  } else if (!/[a-z0-9]/i.test(values.addressTo)) {
-    errors.addressTo = "Enter an address with letters or numbers."
+  } else if (!/^[\p{L}\p{N}\s]+$/u.test(addressTo)) {
+    errors.addressTo = "Use letters and numbers only; spaces are allowed."
   }
 
   if (!values.purpose) {

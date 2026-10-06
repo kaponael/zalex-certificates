@@ -33,7 +33,7 @@ export function mapCertificateRequest(
 ): CertificateRequest {
   return {
     // The API response example does not include reference number or status.
-    referenceNo: request.reference_no,
+    referenceNo: String(request.reference_no),
     addressTo: request.address_to,
     purpose: request.purpose,
     issuedOn: request.issued_on,

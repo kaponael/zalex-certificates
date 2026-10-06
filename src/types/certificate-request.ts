@@ -21,7 +21,7 @@ export type CertificateRequestPayload = {
 }
 
 export type CertificateRequestDto = {
-  reference_no: string
+  reference_no: string | number
   address_to: string
   purpose: string
   issued_on: string

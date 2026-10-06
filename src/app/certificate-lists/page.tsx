@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/page-header"
 import { getCertificateRequests } from "@/api/certificate-request-api"
+import {
+  getLocalCertificateRequests,
+  localCertificateRequestsStorageKey,
+  localCertificateRequestsUpdatedEvent,
+} from "@/lib/certificate-request-storage"
 import { CertificateDataTable } from "./data-table"
 import type { CertificateRequest } from "@/types/certificate-request"
 
@@ -15,13 +20,50 @@ export default function CertificateListsPage() {
 
   useEffect(() => {
     let isActive = true
+    let apiRequests: CertificateRequest[] = []
+    let apiFailed = false
+
+    function refreshRequests() {
+      if (!isActive) return
+
+      const localRequests = getLocalCertificateRequests(apiRequests)
+      const localReferenceNumbers = new Set(
+        localRequests.map((request) => request.referenceNo)
+      )
+      const requests = apiRequests.filter(
+        (request) => !localReferenceNumbers.has(request.referenceNo)
+      )
+
+      setCertificateRequests([...requests, ...localRequests])
+      setError(
+        apiFailed && localRequests.length === 0
+          ? "Unable to load certificate requests."
+          : ""
+      )
+    }
+
+    function handleStorageChange(event: StorageEvent) {
+      if (
+        event.key === localCertificateRequestsStorageKey ||
+        event.key === null
+      ) {
+        refreshRequests()
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener(localCertificateRequestsUpdatedEvent, refreshRequests)
 
     getCertificateRequests()
       .then((requests) => {
-        if (isActive) setCertificateRequests(requests)
+        apiRequests = requests
+        apiFailed = false
+        refreshRequests()
       })
       .catch(() => {
-        if (isActive) setError("Unable to load certificate requests.")
+        apiRequests = []
+        apiFailed = true
+        refreshRequests()
       })
       .finally(() => {
         if (isActive) setIsLoading(false)
@@ -29,6 +71,11 @@ export default function CertificateListsPage() {
 
     return () => {
       isActive = false
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener(
+        localCertificateRequestsUpdatedEvent,
+        refreshRequests
+      )
     }
   }, [])
 
