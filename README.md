@@ -1,4 +1,6 @@
-# Zalex Certificates
+# Zalex Certificates 
+
+https://zalex.kaponael0701.workers.dev/
 
 A Next.js app for submitting certificate requests and viewing certificate records. It uses shadcn-style UI components, with Lucide icons.
 
