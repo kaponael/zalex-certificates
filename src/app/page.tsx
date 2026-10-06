@@ -10,6 +10,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold">Welcome to Zalex Certificates!</h1>
         <div className="flex flex-col gap-6 sm:flex-row">
           <Button
+            className="px-20 py-10 text-lg"
             nativeButton={false}
             render={<Link href="/certificate-lists" />}
             size="lg"
@@ -17,6 +18,7 @@ export default function Home() {
             Certificate Lists
           </Button>
           <Button
+            className="px-20 py-10 text-lg"
             nativeButton={false}
             render={<Link href="/request-certificate" />}
             size="lg"
