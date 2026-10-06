@@ -124,8 +124,8 @@ export function CertificateDataTable({
 
         <TableBody>
           {sortedData.length > 0 ? (
-            sortedData.map((request) => (
-              <TableRow key={request.referenceNo}>
+            sortedData.map((request, index) => (
+              <TableRow key={`${request.referenceNo}-${index}`}>
                 <TableCell>
                   {request.referenceNo}
                 </TableCell>

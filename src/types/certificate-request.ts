@@ -20,6 +20,15 @@ export type CertificateRequestPayload = {
   employee_id: string
 }
 
+export type CertificateRequestDto = {
+  reference_no: string
+  address_to: string
+  purpose: string
+  issued_on: string
+  status: string
+  employee_id: string
+}
+
 export type CertificateRequestResponse = {
   responce?: string
 }

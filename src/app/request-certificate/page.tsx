@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/toast"
 import { DatePickerField } from "@/components/date-picker-field"
 import { FormInput, FormTextarea } from "@/components/form-fields"
-import { submitCertificateRequest } from "@/lib/certificate-request-api"
+import { submitCertificateRequest } from "@/api/certificate-request-api"
 import { validateCertificateRequestForm } from "@/lib/certificate-request-validation"
 import type { FormErrors } from "@/types/certificate-request"
 
