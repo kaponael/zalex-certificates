@@ -26,15 +26,8 @@ export default function CertificateListsPage() {
     function refreshRequests() {
       if (!isActive) return
 
-      const localRequests = getLocalCertificateRequests(apiRequests)
-      const localReferenceNumbers = new Set(
-        localRequests.map((request) => request.referenceNo)
-      )
-      const requests = apiRequests.filter(
-        (request) => !localReferenceNumbers.has(request.referenceNo)
-      )
-
-      setCertificateRequests([...requests, ...localRequests])
+      const localRequests = getLocalCertificateRequests()
+      setCertificateRequests([...apiRequests, ...localRequests])
       setError(
         apiFailed && localRequests.length === 0
           ? "Unable to load certificate requests."
