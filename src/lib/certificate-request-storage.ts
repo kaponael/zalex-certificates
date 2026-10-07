@@ -11,155 +11,41 @@ export const localCertificateRequestsUpdatedEvent =
 const minimumReferenceNumber = 0
 const maximumReferenceNumber = 100
 
-type StoredCertificateRequest = CertificateRequest & {
-  employeeId: string
-}
-
-function parseReferenceNumber(value: unknown): number | null {
-  if (typeof value !== "string" && typeof value !== "number") {
-    return null
-  }
-
-  const text = String(value).trim()
-
-  if (!/^\d+$/.test(text)) {
-    return null
-  }
-
-  const referenceNumber = Number(text)
-
-  return Number.isInteger(referenceNumber) &&
-    referenceNumber >= minimumReferenceNumber &&
-    referenceNumber <= maximumReferenceNumber
-    ? referenceNumber
-    : null
-}
-
-function normalizeStoredRequest(value: unknown): StoredCertificateRequest | null {
-  if (typeof value !== "object" || value === null) {
-    return null
-  }
+// Checks that a saved value looks like a certificate request.
+function isCertificateRequest(value: unknown): value is CertificateRequest {
+  if (typeof value !== "object" || value === null) return false
 
   const request = value as Record<string, unknown>
-  const referenceNo = request.referenceNo
 
-  if (
-    (typeof referenceNo !== "string" && typeof referenceNo !== "number") ||
-    typeof request.addressTo !== "string" ||
-    typeof request.purpose !== "string" ||
-    typeof request.issuedOn !== "string" ||
-    typeof request.status !== "string" ||
-    (request.employeeId !== undefined && typeof request.employeeId !== "string")
-  ) {
-    return null
-  }
-
-  return {
-    referenceNo: String(referenceNo),
-    addressTo: request.addressTo,
-    purpose: request.purpose,
-    issuedOn: request.issuedOn,
-    status: request.status,
-    employeeId: typeof request.employeeId === "string" ? request.employeeId : "",
-  }
+  return (
+    typeof request.referenceNo === "string" &&
+    typeof request.addressTo === "string" &&
+    typeof request.purpose === "string" &&
+    typeof request.issuedOn === "string" &&
+    typeof request.status === "string"
+  )
 }
 
-function readStoredRequests(): StoredCertificateRequest[] {
-  if (typeof window === "undefined") {
-    return []
-  }
+// Reads saved requests from browser storage.
+function readStoredRequests(): CertificateRequest[] {
+  if (typeof window === "undefined") return []
 
   try {
     const savedRequests = window.localStorage.getItem(
       localCertificateRequestsStorageKey
     )
+    const parsedRequests: unknown = JSON.parse(savedRequests ?? "[]")
 
-    if (!savedRequests) {
-      return []
-    }
-
-    const parsedRequests: unknown = JSON.parse(savedRequests)
-
-    if (!Array.isArray(parsedRequests)) {
-      return []
-    }
-
-    const requests: StoredCertificateRequest[] = []
-
-    for (const parsedRequest of parsedRequests) {
-      const request = normalizeStoredRequest(parsedRequest)
-
-      if (request) {
-        requests.push(request)
-      }
-    }
-
-    return requests
+    return Array.isArray(parsedRequests)
+      ? parsedRequests.filter(isCertificateRequest)
+      : []
   } catch {
     return []
   }
 }
 
-function getAvailableReferenceNumber(usedNumbers: Set<number>): number | null {
-  for (
-    let referenceNumber = minimumReferenceNumber;
-    referenceNumber <= maximumReferenceNumber;
-    referenceNumber += 1
-  ) {
-    if (!usedNumbers.has(referenceNumber)) {
-      return referenceNumber
-    }
-  }
-
-  return null
-}
-
-function reconcileLocalReferenceNumbers(
-  localRequests: StoredCertificateRequest[],
-  apiRequests: CertificateRequest[]
-) {
-  const usedNumbers = new Set<number>()
-
-  for (const request of apiRequests) {
-    const referenceNumber = parseReferenceNumber(request.referenceNo)
-
-    if (referenceNumber !== null) {
-      usedNumbers.add(referenceNumber)
-    }
-  }
-
-  let changed = false
-
-  const requests = localRequests.map((request) => {
-    const currentNumber = parseReferenceNumber(request.referenceNo)
-    const isAvailable =
-      currentNumber !== null && !usedNumbers.has(currentNumber)
-    const referenceNumber = isAvailable
-      ? currentNumber
-      : getAvailableReferenceNumber(usedNumbers)
-
-    if (referenceNumber === null) {
-      return request
-    }
-
-    usedNumbers.add(referenceNumber)
-
-    if (referenceNumber === currentNumber) {
-      return request
-    }
-
-    changed = true
-    return { ...request, referenceNo: String(referenceNumber) }
-  })
-
-  return { requests, changed, usedNumbers }
-}
-
-function saveStoredRequests(requests: StoredCertificateRequest[]): boolean {
-  if (typeof window === "undefined") {
-    return false
-  }
-
+// Saves the updated request list to browser storage.
+function saveStoredRequests(requests: CertificateRequest[]): boolean {
   try {
     window.localStorage.setItem(
       localCertificateRequestsStorageKey,
@@ -171,65 +57,65 @@ function saveStoredRequests(requests: StoredCertificateRequest[]): boolean {
   }
 }
 
-function toCertificateRequest(
-  request: StoredCertificateRequest
-): CertificateRequest {
-  return {
-    referenceNo: request.referenceNo,
-    addressTo: request.addressTo,
-    purpose: request.purpose,
-    issuedOn: request.issuedOn,
-    status: request.status,
-  }
-}
+// Finds the first unused number from 0 to 100.
+function getNextReferenceNumber(
+  apiRequests: CertificateRequest[],
+  localRequests: CertificateRequest[]
+): number | null {
+  const usedNumbers = new Set<number>()
 
-export function getLocalCertificateRequests(
-  apiRequests: CertificateRequest[] = []
-): CertificateRequest[] {
-  const result = reconcileLocalReferenceNumbers(
-    readStoredRequests(),
-    apiRequests
-  )
+  for (const request of [...apiRequests, ...localRequests]) {
+    if (!/^\d+$/.test(request.referenceNo)) continue
 
-  if (result.changed) {
-    saveStoredRequests(result.requests)
+    const referenceNumber = Number(request.referenceNo)
+
+    if (
+      Number.isInteger(referenceNumber) &&
+      referenceNumber >= minimumReferenceNumber &&
+      referenceNumber <= maximumReferenceNumber
+    ) {
+      usedNumbers.add(referenceNumber)
+    }
   }
 
-  return result.requests.map(toCertificateRequest)
+  for (
+    let referenceNumber = minimumReferenceNumber;
+    referenceNumber <= maximumReferenceNumber;
+    referenceNumber += 1
+  ) {
+    if (!usedNumbers.has(referenceNumber)) return referenceNumber
+  }
+
+  return null
 }
 
+// Gets saved requests for the certificate list page.
+export function getLocalCertificateRequests(): CertificateRequest[] {
+  return readStoredRequests()
+}
+
+// Adds a request to browser storage and tells the list to refresh.
 export function appendLocalCertificateRequest(
   payload: CertificateRequestPayload,
   apiRequests: CertificateRequest[] = []
 ): CertificateRequest | null {
-  if (typeof window === "undefined") {
-    return null
-  }
+  if (typeof window === "undefined") return null
 
-  const result = reconcileLocalReferenceNumbers(
-    readStoredRequests(),
-    apiRequests
-  )
-  const referenceNumber = getAvailableReferenceNumber(result.usedNumbers)
+  const localRequests = readStoredRequests()
+  const referenceNumber = getNextReferenceNumber(apiRequests, localRequests)
 
-  if (referenceNumber === null) {
-    return null
-  }
+  if (referenceNumber === null) return null
 
-  const request: StoredCertificateRequest = {
+  const request: CertificateRequest = {
     referenceNo: String(referenceNumber),
     addressTo: payload.address_to,
     purpose: payload.purpose,
     issuedOn: payload.issued_on,
     status: "New",
-    employeeId: payload.employee_id,
   }
 
-  if (!saveStoredRequests([...result.requests, request])) {
-    return null
-  }
+  if (!saveStoredRequests([...localRequests, request])) return null
 
   window.dispatchEvent(new Event(localCertificateRequestsUpdatedEvent))
-
-  return toCertificateRequest(request)
+  return request
 }
