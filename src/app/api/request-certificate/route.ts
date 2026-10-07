@@ -1,3 +1,5 @@
+// Next.js runs this handler for POST requests to /api/request-certificate.
+// The folder sets the URL, and the function name matches the HTTP method.
 export async function POST(request: Request) {
   const apiKey = process.env.API_KEY
 
