@@ -1,3 +1,5 @@
+// Next.js runs this handler for GET requests to /api/certificate-list.
+// The folder sets the URL, and the function name matches the HTTP method.
 export async function GET() {
   const apiKey = process.env.API_KEY
 
