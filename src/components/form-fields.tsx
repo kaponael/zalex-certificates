@@ -4,13 +4,19 @@ import type { ComponentProps, ReactNode } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type FieldProps = {
   id: string
   label: string
   error?: string
-  options?: string[]
   counter?: ReactNode
 }
 
@@ -28,9 +34,12 @@ type FormTextareaProps = FieldProps &
 
 type FormSelectProps = FieldProps &
   Omit<
-    ComponentProps<typeof Select>,
-      "id" | "aria-describedby" | "aria-invalid"
-  >
+    ComponentProps<typeof Select<string>>,
+    "id" | "children" | "items" | "multiple"
+  > & {
+    options: readonly string[]
+    placeholder?: string
+  }
 
 export function FormField({
   id,
@@ -115,16 +124,32 @@ export function FormSelect({
   error,
   options,
   counter,
+  placeholder = "Select an option",
   ...props
 }: FormSelectProps) {
+  const items = options.map((option) => ({ value: option, label: option }))
+
   return (
-    <FormField id={id} label={label} options={options} error={error} counter={counter}>
-      <Select
-        {...props}
-        id={id}
-        aria-invalid={Boolean(error)}
-        aria-describedby={getDescribedBy(id, counter, error)}
-      />
+    <FormField id={id} label={label} error={error} counter={counter}>
+      <Select {...props} items={items}>
+        <SelectTrigger
+          id={id}
+          className="w-full"
+          aria-invalid={Boolean(error)}
+          aria-describedby={getDescribedBy(id, counter, error)}
+        >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {items.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </FormField>
   )
 }
