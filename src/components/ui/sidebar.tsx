@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -67,7 +68,16 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void
 }) {
   const isMobile = useIsMobile()
+  const currentPage = usePathname()
+  const [previousPage, setPreviousPage] = React.useState(currentPage)
   const [openMobile, setOpenMobile] = React.useState(false)
+
+  // Reset the mobile drawer once navigation reaches a different page.
+  // Desktop openness has its own state and stays unchanged.
+  if (currentPage !== previousPage) {
+    setPreviousPage(currentPage)
+    setOpenMobile(false)
+  }
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.

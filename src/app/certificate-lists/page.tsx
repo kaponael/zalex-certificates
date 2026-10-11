@@ -75,7 +75,7 @@ export default function CertificateListsPage() {
   return (
     <>
       <PageHeader title="Certificate Lists" />
-      <section className="flex-1 p-6">
+      <section className="min-w-0 flex-1 p-4 sm:p-6">
         {isLoading ? (
           <p role="status">Loading certificate requests...</p>
         ) : error ? (

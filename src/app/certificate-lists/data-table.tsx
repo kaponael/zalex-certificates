@@ -6,6 +6,8 @@ import {
   ArrowUpDownIcon,
   ArrowUpIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -58,6 +60,8 @@ const filterColumns = [
 
 type FilterField = (typeof filterColumns)[number]["field"]
 
+const resultsPerPage = 10
+
 export function CertificateDataTable({
   data,
 }: {
@@ -66,12 +70,14 @@ export function CertificateDataTable({
   const [sort, setSort] = useState<Sort | null>(null)
   const [filterField, setFilterField] = useState<FilterField>("addressTo")
   const [filterValue, setFilterValue] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
 
   const selectedFilterColumn =
     filterColumns.find((column) => column.field === filterField) ??
     filterColumns[0]
 
   function handleSort(field: SortField) {
+    setCurrentPage(1)
     setSort((currentSort) => {
       if (currentSort?.field === field) {
         return {
@@ -130,6 +136,15 @@ export function CertificateDataTable({
     })
   }, [filteredData, sort])
 
+  const totalPages = Math.max(1, Math.ceil(sortedData.length / resultsPerPage))
+  const pageNumber = Math.min(currentPage, totalPages)
+  const firstResultIndex = (pageNumber - 1) * resultsPerPage
+  const pageData = sortedData.slice(firstResultIndex, firstResultIndex + resultsPerPage)
+
+  if (currentPage > totalPages) {
+    setCurrentPage(totalPages)
+  }
+
   function getSortIcon(field: SortField) {
     if (sort?.field !== field) {
       return <ArrowUpDownIcon />
@@ -141,12 +156,15 @@ export function CertificateDataTable({
   }
 
   return (
-    <div>
-      <div className="mb-4 max-w-md">
+    <div className="min-w-0 space-y-4">
+      <div className="w-full max-w-md">
         <ListFilter
           label="Filter certificate requests"
           value={filterValue}
-          onValueChange={setFilterValue}
+          onValueChange={(value) => {
+            setFilterValue(value)
+            setCurrentPage(1)
+          }}
           placeholder={selectedFilterColumn.placeholder}
         >
           <DropdownMenu>
@@ -154,7 +172,7 @@ export function CertificateDataTable({
               render={
                 <InputGroupButton
                   variant="ghost"
-                  className="pr-1.5! text-xs"
+                  className="shrink-0 pr-1.5! text-xs"
                   aria-label={`Filter by ${selectedFilterColumn.label}`}
                 />
               }
@@ -171,7 +189,10 @@ export function CertificateDataTable({
                 {filterColumns.map((column) => (
                   <DropdownMenuItem
                     key={column.field}
-                    onClick={() => setFilterField(column.field)}
+                    onClick={() => {
+                      setFilterField(column.field)
+                      setCurrentPage(1)
+                    }}
                   >
                     {column.label}
                   </DropdownMenuItem>
@@ -182,19 +203,87 @@ export function CertificateDataTable({
         </ListFilter>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="flex flex-wrap items-center gap-2 md:hidden" aria-label="Sort certificate requests">
+        <span className="text-sm text-muted-foreground">Sort by:</span>
+        <Button
+          type="button"
+          variant="ghost"
+          className="min-h-10 px-3"
+          aria-label={`Sort by issued on${sort?.field === "issuedOn" ? `, currently ${sort.direction === "asc" ? "ascending" : "descending"}` : ""}`}
+          onClick={() => handleSort("issuedOn")}
+        >
+          Issued on
+          {getSortIcon("issuedOn")}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="min-h-10 px-3"
+          aria-label={`Sort by status${sort?.field === "status" ? `, currently ${sort.direction === "asc" ? "ascending" : "descending"}` : ""}`}
+          onClick={() => handleSort("status")}
+        >
+          Status
+          {getSortIcon("status")}
+        </Button>
+      </div>
+
+      <div className="md:hidden">
+        {sortedData.length === 0 ? (
+          <p className="rounded-md border p-6 text-center text-sm">
+            No certificate requests found.
+          </p>
+        ) : (
+          <ul className="grid gap-4">
+            {pageData.map((request, index) => (
+              <li key={`${request.referenceNo}-${firstResultIndex + index}`} className="min-w-0 rounded-md border p-4">
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+                  <h2 className="min-w-0 text-sm font-semibold [overflow-wrap:anywhere]">
+                    Reference No. {request.referenceNo}
+                  </h2>
+                  <div className="min-w-0 max-w-full [&_[data-slot=badge]]:h-auto [&_[data-slot=badge]]:min-h-5 [&_[data-slot=badge]]:max-w-full [&_[data-slot=badge]]:whitespace-normal [&_[data-slot=badge]]:[overflow-wrap:anywhere]">
+                    <CertificateStatusBadge status={request.status} />
+                  </div>
+                </div>
+                <dl className="grid gap-4 text-sm sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <dt className="text-muted-foreground">Address to</dt>
+                    <dd className="mt-1 [overflow-wrap:anywhere]">{request.addressTo}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-muted-foreground">Certified by</dt>
+                    <dd className="mt-1 [overflow-wrap:anywhere]">{request.certified_by?.join(", ") || "—"}</dd>
+                  </div>
+                  <div className="min-w-0 sm:col-span-2">
+                    <dt className="text-muted-foreground">Purpose</dt>
+                    <dd className="mt-1 [overflow-wrap:anywhere]">{request.purpose}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-muted-foreground">Issued on</dt>
+                    <dd className="mt-1 [overflow-wrap:anywhere]">{request.issuedOn}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="hidden min-w-0 rounded-md border md:block">
+        <Table className="min-w-[56rem] table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>Reference No.</TableHead>
+              <TableHead className="w-[12%]">Reference No.</TableHead>
 
-              <TableHead>Address to</TableHead>
+              <TableHead className="w-[18%]">Address to</TableHead>
 
-              <TableHead>Purpose</TableHead>
+              <TableHead className="w-[28%]">Purpose</TableHead>
 
-              <TableHead>Certified By</TableHead>
+              <TableHead className="w-[14%]">Certified By</TableHead>
 
-              <TableHead>
+              <TableHead
+                className="w-[14%]"
+                aria-sort={sort?.field === "issuedOn" ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
+              >
                 <Button
                   type="button"
                   variant="ghost"
@@ -206,7 +295,10 @@ export function CertificateDataTable({
                 </Button>
               </TableHead>
 
-              <TableHead>
+              <TableHead
+                className="w-[14%]"
+                aria-sort={sort?.field === "status" ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
+              >
                 <Button
                   type="button"
                   variant="ghost"
@@ -222,8 +314,8 @@ export function CertificateDataTable({
 
           <TableBody>
             {sortedData.length > 0 ? (
-              sortedData.map((request, index) => (
-                <TableRow key={`${request.referenceNo}-${index}`}>
+              pageData.map((request, index) => (
+                <TableRow key={`${request.referenceNo}-${firstResultIndex + index}`} className="[&>td]:align-top [&>td]:whitespace-normal [&>td]:[overflow-wrap:anywhere]">
                   <TableCell>
                     {request.referenceNo}
                   </TableCell>
@@ -244,7 +336,7 @@ export function CertificateDataTable({
                     {request.issuedOn}
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className="[&_[data-slot=badge]]:h-auto [&_[data-slot=badge]]:min-h-5 [&_[data-slot=badge]]:max-w-full [&_[data-slot=badge]]:whitespace-normal [&_[data-slot=badge]]:[overflow-wrap:anywhere]">
                     <CertificateStatusBadge status={request.status} />
                   </TableCell>
                 </TableRow>
@@ -262,6 +354,42 @@ export function CertificateDataTable({
           </TableBody>
         </Table>
       </div>
+
+      <nav
+        aria-label="Certificate list pagination"
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <p className="text-sm text-muted-foreground" role="status">
+          Showing {sortedData.length === 0 ? 0 : firstResultIndex + 1}
+          {"–"}{Math.min(firstResultIndex + resultsPerPage, sortedData.length)}
+          {" of "}{sortedData.length} results
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-10 px-3"
+            disabled={pageNumber === 1}
+            onClick={() => setCurrentPage(pageNumber - 1)}
+          >
+            <ChevronLeftIcon />
+            Previous
+          </Button>
+          <span className="text-sm" aria-live="polite">
+            Page {pageNumber} of {totalPages}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-10 px-3"
+            disabled={pageNumber === totalPages}
+            onClick={() => setCurrentPage(pageNumber + 1)}
+          >
+            Next
+            <ChevronRightIcon />
+          </Button>
+        </div>
+      </nav>
     </div>
   )
 }

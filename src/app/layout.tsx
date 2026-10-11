@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <SidebarProvider defaultOpen={false}>
           <AppSidebar />
-          <main className="flex min-h-svh flex-1 flex-col">
+          <main className="flex min-h-svh min-w-0 flex-1 flex-col">
             {children}
           </main>
           <Toaster />
