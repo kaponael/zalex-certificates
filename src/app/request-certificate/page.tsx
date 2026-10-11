@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
+import Link from "next/link"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -13,6 +14,8 @@ import {
 } from "@/api/certificate-request-api"
 import { validateCertificateRequestForm } from "@/lib/certificate-request-validation"
 import { appendLocalCertificateRequest } from "@/lib/certificate-request-storage"
+import { loadActiveCertifierNames } from "@/lib/certifier-storage"
+import { useCertifierList } from "@/hooks/use-certifier-list"
 import type {
   CertificateRequest,
   CertificateRequestPayload,
@@ -27,6 +30,19 @@ export default function RequestCertificatePage() {
   const [purposeLength, setPurposeLength] = useState(0)
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [certifiedBy, setCertifiedBy] = useState<string | null>(null)
+  const { certifierNames, isLoading: isLoadingCertifiers } = useCertifierList()
+
+  let selectedCertifierName: string | null = null
+  if (certifiedBy && certifierNames.includes(certifiedBy)) {
+    selectedCertifierName = certifiedBy
+  }
+
+  let certifierPlaceholder = "Select a person"
+  if (isLoadingCertifiers) {
+    certifierPlaceholder = "Loading certifiers..."
+  } else if (certifierNames.length === 0) {
+    certifierPlaceholder = "No certifiers available"
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -45,6 +61,8 @@ export default function RequestCertificatePage() {
       purpose,
       issuedOn,
       employeeId,
+      certifiedBy: selectedCertifier,
+      certifiers: loadActiveCertifierNames(),
     })
 
     setErrors(nextErrors)
@@ -181,15 +199,19 @@ export default function RequestCertificatePage() {
             id="certified_by"
             name="certified_by"
             label="Certified by"
-            placeholder="Select a person"
-            value={certifiedBy}
+            placeholder={certifierPlaceholder}
+            value={selectedCertifierName}
             onValueChange={setCertifiedBy}
             error={errors.certified_by}
-            options={[
-              "John Doe",
-              "Jane Doe",
-            ]}
+            options={certifierNames}
+            disabled={isLoadingCertifiers || certifierNames.length === 0}
           />
+          <p className="text-sm text-muted-foreground">
+            <Link href="/certifiers" className="underline underline-offset-4">
+              Manage certifiers
+            </Link>
+            {" to add or remove people from this list."}
+          </p>
 
           <Button
             type="submit"

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sidebar"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import Link from "next/link"
-import { FilePlusIcon, FilesIcon, HomeIcon } from "lucide-react"
+import { FilePlusIcon, FilesIcon, HomeIcon, UsersIcon } from "lucide-react"
 
 export function AppSidebar() {
   return (
@@ -41,6 +41,12 @@ export function AppSidebar() {
                 <SidebarMenuButton render={<Link href="/request-certificate" />}>
                   <FilePlusIcon aria-hidden="true" />
                   <span>Request Certificate</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton render={<Link href="/certifiers" />}>
+                  <UsersIcon aria-hidden="true" />
+                  <span>Certifiers</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

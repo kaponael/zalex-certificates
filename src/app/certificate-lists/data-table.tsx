@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { ListFilter } from "@/components/list-filter"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,12 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group"
+import { InputGroupButton } from "@/components/ui/input-group"
 import { CertificateStatusBadge } from "@/components/certificate-status-badge"
 import {
   Table,
@@ -77,7 +73,6 @@ export function CertificateDataTable({
 
   function handleSort(field: SortField) {
     setSort((currentSort) => {
-      // Clicking the same column flips asc/desc
       if (currentSort?.field === field) {
         return {
           field,
@@ -88,7 +83,6 @@ export function CertificateDataTable({
         }
       }
 
-      // Clicking a new sortable column starts ascending
       return {
         field,
         direction: "asc",
@@ -149,48 +143,43 @@ export function CertificateDataTable({
   return (
     <div>
       <div className="mb-4 max-w-md">
-        <InputGroup aria-label="Filter certificate requests">
-          <InputGroupInput
-            type="search"
-            value={filterValue}
-            onChange={(event) => setFilterValue(event.currentTarget.value)}
-            placeholder={selectedFilterColumn.placeholder}
-            aria-label={selectedFilterColumn.placeholder}
-          />
-
-          <InputGroupAddon align="inline-end">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <InputGroupButton
-                    variant="ghost"
-                    className="pr-1.5! text-xs"
-                    aria-label={`Filter by ${selectedFilterColumn.label}`}
-                  />
-                }
-              >
-                {selectedFilterColumn.label}
-                <ChevronDownIcon className="size-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                sideOffset={8}
-                alignOffset={-4}
-              >
-                <DropdownMenuGroup>
-                  {filterColumns.map((column) => (
-                    <DropdownMenuItem
-                      key={column.field}
-                      onClick={() => setFilterField(column.field)}
-                    >
-                      {column.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </InputGroupAddon>
-        </InputGroup>
+        <ListFilter
+          label="Filter certificate requests"
+          value={filterValue}
+          onValueChange={setFilterValue}
+          placeholder={selectedFilterColumn.placeholder}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <InputGroupButton
+                  variant="ghost"
+                  className="pr-1.5! text-xs"
+                  aria-label={`Filter by ${selectedFilterColumn.label}`}
+                />
+              }
+            >
+              {selectedFilterColumn.label}
+              <ChevronDownIcon className="size-3" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              alignOffset={-4}
+            >
+              <DropdownMenuGroup>
+                {filterColumns.map((column) => (
+                  <DropdownMenuItem
+                    key={column.field}
+                    onClick={() => setFilterField(column.field)}
+                  >
+                    {column.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ListFilter>
       </div>
 
       <div className="rounded-md border">

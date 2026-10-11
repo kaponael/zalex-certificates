@@ -5,6 +5,8 @@ export type CertificateRequestFormValues = {
   purpose: string
   issuedOn: string
   employeeId: string
+  certifiedBy?: string
+  certifiers?: readonly string[]
 }
 
 export function validateCertificateRequestForm(
@@ -43,6 +45,14 @@ export function validateCertificateRequestForm(
     errors.employeeId = "Employee ID is required."
   } else if (!/^\d+$/.test(values.employeeId)) {
     errors.employeeId = "Employee ID must contain numbers only."
+  }
+
+  if (
+    values.certifiedBy &&
+    values.certifiers &&
+    !values.certifiers.includes(values.certifiedBy)
+  ) {
+    errors.certified_by = "This certifier is no longer available. Choose another person."
   }
 
   return errors
