@@ -203,6 +203,8 @@ export function CertificateDataTable({
 
               <TableHead>Purpose</TableHead>
 
+              <TableHead>Certified By</TableHead>
+
               <TableHead>
                 <Button
                   type="button"
@@ -246,6 +248,10 @@ export function CertificateDataTable({
                   </TableCell>
 
                   <TableCell>
+                    {request.certified_by?.join(", ") || "—"}
+                  </TableCell>
+
+                  <TableCell>
                     {request.issuedOn}
                   </TableCell>
 
@@ -257,7 +263,7 @@ export function CertificateDataTable({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-24 text-center"
                 >
                   No certificate requests found.

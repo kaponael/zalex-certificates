@@ -4,6 +4,7 @@ export type CertificateRequest = {
   purpose: string
   issuedOn: string
   status: string
+  certified_by?: string[]
 }
 
 export type FormErrors = {
@@ -11,6 +12,7 @@ export type FormErrors = {
   purpose?: string
   issuedOn?: string
   employeeId?: string
+  certified_by?: string
 }
 
 export type CertificateRequestPayload = {
@@ -18,6 +20,7 @@ export type CertificateRequestPayload = {
   purpose: string
   issued_on: string
   employee_id: string
+  certified_by: string[]
 }
 
 export type CertificateRequestDto = {
@@ -27,6 +30,7 @@ export type CertificateRequestDto = {
   issued_on: string
   status: string
   employee_id: string
+  certified_by?: string[]
 }
 
 export type CertificateRequestResponse = {

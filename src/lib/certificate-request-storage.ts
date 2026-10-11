@@ -22,7 +22,10 @@ function isCertificateRequest(value: unknown): value is CertificateRequest {
     typeof request.addressTo === "string" &&
     typeof request.purpose === "string" &&
     typeof request.issuedOn === "string" &&
-    typeof request.status === "string"
+    typeof request.status === "string" &&
+    (request.certified_by === undefined ||
+      (Array.isArray(request.certified_by) &&
+        request.certified_by.every((person) => typeof person === "string")))
   )
 }
 
@@ -112,6 +115,7 @@ export function appendLocalCertificateRequest(
     purpose: payload.purpose,
     issuedOn: payload.issued_on,
     status: "New",
+    certified_by: payload.certified_by,
   }
 
   if (!saveStoredRequests([...localRequests, request])) return null

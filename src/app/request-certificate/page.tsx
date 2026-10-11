@@ -6,14 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/toast"
 import { DatePickerField } from "@/components/date-picker-field"
-import { FormInput, FormTextarea } from "@/components/form-fields"
+import { FormInput, FormTextarea, FormSelect } from "@/components/form-fields"
 import {
   getCertificateRequests,
   submitCertificateRequest,
 } from "@/api/certificate-request-api"
 import { validateCertificateRequestForm } from "@/lib/certificate-request-validation"
 import { appendLocalCertificateRequest } from "@/lib/certificate-request-storage"
-import type { CertificateRequest, FormErrors } from "@/types/certificate-request"
+import type {
+  CertificateRequest,
+  CertificateRequestPayload,
+  FormErrors,
+} from "@/types/certificate-request"
 
 const successMessage = "Certificate request submitted successfully."
 
@@ -22,6 +26,7 @@ export default function RequestCertificatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [purposeLength, setPurposeLength] = useState(0)
   const [selectedDate, setSelectedDate] = useState<Date>()
+  const [certifiedBy, setCertifiedBy] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -33,6 +38,7 @@ export default function RequestCertificatePage() {
     const purpose = String(formData.get("purpose") ?? "").trim()
     const issuedOn = String(formData.get("issuedOn") ?? "")
     const employeeId = String(formData.get("employeeId") ?? "")
+    const selectedCertifier = String(formData.get("certified_by") ?? "")
 
     const nextErrors = validateCertificateRequestForm({
       addressTo,
@@ -51,11 +57,12 @@ export default function RequestCertificatePage() {
     setIsSubmitting(true)
 
     try {
-      const payload = {
+      const payload: CertificateRequestPayload = {
         address_to: addressTo,
         purpose,
         issued_on: apiIssuedOn,
         employee_id: employeeId,
+        certified_by: selectedCertifier ? [selectedCertifier] : [],
       }
 
       let apiRequests: CertificateRequest[] = []
@@ -109,6 +116,7 @@ export default function RequestCertificatePage() {
         form.reset()
         setPurposeLength(0)
         setSelectedDate(undefined)
+        setCertifiedBy(null)
       }
     } catch {
       toast.add({
@@ -167,6 +175,20 @@ export default function RequestCertificatePage() {
             inputMode="numeric"
             pattern="[0-9]*"
             required
+          />
+
+          <FormSelect
+            id="certified_by"
+            name="certified_by"
+            label="Certified by"
+            placeholder="Select a person"
+            value={certifiedBy}
+            onValueChange={setCertifiedBy}
+            error={errors.certified_by}
+            options={[
+              "John Doe",
+              "Jane Doe",
+            ]}
           />
 
           <Button

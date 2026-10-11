@@ -38,5 +38,6 @@ export function mapCertificateRequest(
     purpose: request.purpose,
     issuedOn: request.issued_on,
     status: request.status,
+    certified_by: request.certified_by,
   }
 }

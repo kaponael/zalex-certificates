@@ -4,11 +4,13 @@ import type { ComponentProps, ReactNode } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select } from "@/components/ui/select"
 
 type FieldProps = {
   id: string
   label: string
   error?: string
+  options?: string[]
   counter?: ReactNode
 }
 
@@ -22,6 +24,12 @@ type FormTextareaProps = FieldProps &
   Omit<
     ComponentProps<typeof Textarea>,
     "id" | "aria-describedby" | "aria-invalid"
+  >
+
+type FormSelectProps = FieldProps &
+  Omit<
+    ComponentProps<typeof Select>,
+      "id" | "aria-describedby" | "aria-invalid"
   >
 
 export function FormField({
@@ -92,6 +100,26 @@ export function FormTextarea({
   return (
     <FormField id={id} label={label} error={error} counter={counter}>
       <Textarea
+        {...props}
+        id={id}
+        aria-invalid={Boolean(error)}
+        aria-describedby={getDescribedBy(id, counter, error)}
+      />
+    </FormField>
+  )
+}
+
+export function FormSelect({
+  id,
+  label,
+  error,
+  options,
+  counter,
+  ...props
+}: FormSelectProps) {
+  return (
+    <FormField id={id} label={label} options={options} error={error} counter={counter}>
+      <Select
         {...props}
         id={id}
         aria-invalid={Boolean(error)}
